@@ -1,0 +1,35 @@
+component fuji_frenic_vfd "Byte Bit converter for  Fuji Frenic VFD";
+author "Matt Wortley";
+//include "spibus.h";
+license "GPLv2 or later";
+description """This component converts responses and commands for a Fuji Frenic FRN005G11S-4UX drive sitting on modbus """;
+
+pin in bit resetCmd "bit sets Fault/Drive Reset Command to Drive";
+pin in bit fwdCmd "bit requests drive to run FWD" ;
+pin in bit revCmd "bit requests drive to run REV" ;
+pin in float nominalRPM "the variator setting" ;
+pin in float desiredRPM "desired drive RPM" ;
+
+param rw float nominalHz=60 "the design power frequency of the motor i.e. 60Hz";
+param rw float outputCountsPerHz=222.22 "speed register counts per Hz";
+param rw float outputCountsMax=20000 "speed register counts Max";
+param rw float outputCountsMin=0 "speed register counts Min";
+
+pin out float operReg "float to send to operation register over modbus for FWD REV RST etc.";
+pin out float speedReg "float to send to the speed setting register 0-20000.";
+
+function _ ;
+;;
+ 
+FUNCTION(_) {
+  operReg=(resetCmd<<15)+\
+	  (revCmd<<1)+
+	  fwdCmd; 
+  speedReg=desiredRPM/nominalRPM*nominalHz*outputCountsPerHz;
+} // End function
+int testfunc ( struct __comp_state *__comp_inst ) {
+  return 1;
+}
+
+
+
