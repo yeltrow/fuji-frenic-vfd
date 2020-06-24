@@ -9,6 +9,25 @@ pin in bit fwdCmd "bit requests drive to run FWD" ;
 pin in bit revCmd "bit requests drive to run REV" ;
 pin in float nominalRPM "the variator setting" ;
 pin in float desiredRPM "desired drive RPM" ;
+pin in signed vfdOperStateReg "status word from vfd to interpret" ;
+
+pin out bit fwdOp "Forward Operation" ;
+pin out bit revOp "Reverse Operation" ;
+pin out bit extBrake "DC Brake Active" ;
+pin out bit intOp "No Ouput" ;
+pin out bit brakeActive "Braking Active" ;
+pin out bit dcLinkOk "DC Link Voltage Present" ;
+pin out bit torqueLimActive "Torque Limiting Active" ;
+pin out bit voltageLimActive "Voltage Limited Active" ; 
+pin out bit currentLimActive "Current Limiting Active" ;
+pin out bit accelerating "Accellerating Active" ;
+pin out bit decelerating "Decelleration Active" ;
+pin out bit alarm "Fault Present" ;
+pin out bit receive "Transmission Ok" ;
+pin out bit keypadWriteEnable "Keypad has write privilege" ;
+pin out bit rs485WrietEnable "RS485 has write privilege" ;
+pin out bit fieldbusWriteEnable "Fieldbus has write privilege" ;
+pin out bit busy "Processing write data" ;
 
 param rw float nominalHz=60 "the design power frequency of the motor i.e. 60Hz";
 param rw float outputCountsPerHz=222.22 "speed register counts per Hz";
@@ -22,11 +41,36 @@ function _ ;
 ;;
  
 FUNCTION(_) {
+  int opStatus;
   operReg=(resetCmd<<15)+\
 	  (revCmd<<1)+
 	  fwdCmd; 
   speedReg=desiredRPM/nominalRPM*nominalHz*outputCountsPerHz;
+
+  opStatus = vfdOperStateReg;
+  fwdOp=(0x01) & opStatus; opStatus=opStatus>>1;
+  revOp=(0x01) & opStatus; opStatus=opStatus>>1;
+  extBrake=(0x01) & opStatus; opStatus=opStatus>>1;
+  intOp=(0x01) & opStatus; opStatus=opStatus>>1;
+  brakeActive=(0x01) & opStatus; opStatus=opStatus>>1;
+  dcLinkOk=(0x01) & opStatus; opStatus=opStatus>>1;
+  torqueLimActive=(0x01) & opStatus; opStatus=opStatus>>1;
+  voltageLimActive=(0x01) & opStatus; opStatus=opStatus>>1;
+  currentLimActive=(0x01) & opStatus; opStatus=opStatus>>1;
+  accelerating=(0x01) & opStatus; opStatus=opStatus>>1;
+  decelerating=(0x01) & opStatus; opStatus=opStatus>>1;
+  alarm=(0x01) & opStatus; opStatus=opStatus>>1;
+  receive=(0x01) & opStatus; opStatus=opStatus>>1;
+  keypadWriteEnable=(((0x03) & opStatus)==0x00);
+  rs485WrietEnable=(((0x03) & opStatus)==0x01);
+  keypadWriteEnable=(((0x03) & opStatus)==0x00);
+  fieldbusWriteEnable=(((0x03) & opStatus)==0x02);
+  opStatus=opStatus>>2;
+  busy=(0x01) & opStatus; 
+
+	    
 } // End function
+
 int testfunc ( struct __comp_state *__comp_inst ) {
   return 1;
 }
